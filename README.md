@@ -44,15 +44,17 @@ Apache Zookeeper est une application de coordination d'applications distribuées
 ## 🧪 Activités pratiques
 
 ### 1. Analysez l'architecture
-Examinez les fichiers `src/orders/commands/write_user.py` (store_manager, labo5) et `src/handlers/user_created_handler.py` (coolriel, labo7) et réfléchissez sur le flux d'événements. Utilisez la collection Postman du labo 5 pour ajouter quelques utilisateurs et observez les messages dans le terminal des deux applications (par exemple, via Docker Desktop).
+Examinez les méthodes de création dans les fichiers `src/orders/commands/write_user.py` (store_manager, labo5) et `src/handlers/user_created_handler.py` (coolriel, labo7) et réfléchissez sur le flux d'événements. Utilisez la collection Postman du labo 5 pour ajouter quelques utilisateurs et observez les messages dans le terminal des deux applications (par exemple, via Docker Desktop).
 
 > 💡 **Question 1** : Quelle est la différence entre la communication entre `store_manager` et `coolriel` dans ce labo, et la communication entre `store_manager` et `payments_api` que nous avons implémentée pendant le labo 5 ? Expliquez avec des extraits de code ou des diagrammes.
 
 ### 2. Implémentez un handler de suppression d'utilisateur
-Dans `coolriel`, complétez l'implémentation de `src/handlers/user_deleted_handler.py` pour gérer les événements de suppression d'utilisateur. Le handler doit :
+Dans le microservice `coolriel`, complétez l'implémentation de `src/handlers/user_deleted_handler.py` pour gérer les événements de suppression d'utilisateur. Le handler doit :
 - Consommer les événements du topic `user-events` avec type = `UserDeleted`
 - Générer un template de courriel d'au revoir en utilisant les données qui sont dans le message déclenché par l'événement `UserDeleted`
-- Sauvegarder le HTML résultant dans le disque
+- Enregistrer le HTML résultant dans le disque
+
+Également dans `store_manager`, modifiez les méthodes dans `src/orders/commands/write_user.py` selon les besoins.
 
 ### 3. Ajoutez des types d'utilisateur
 Dans le `store_manager`, modifiez `db-init/init.sql` pour ajouter champ `user_type_id` à la table `User`. Créez une table `UserType` pour faire la distinction entre trois types d'utilisateurs : clients, employés et directeurs du magasin. Relecionez `UserType` et `User` en utilisant `FOREIGN KEY`.
