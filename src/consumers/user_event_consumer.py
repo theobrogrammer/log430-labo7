@@ -48,7 +48,7 @@ class UserEventConsumer:
             for message in self.consumer:
                 self._process_message(message.value)
         except KeyboardInterrupt:
-            logger.debug(f"Arrêter le consommateur!")
+            logger.info(f"Arrêter le consommateur!")
         finally:
             self.stop()
     
@@ -75,4 +75,4 @@ class UserEventConsumer:
         """Stop the consumer gracefully"""
         if self.consumer:
             self.consumer.close()
-            logger.debug("Arrêter le consommateur!")
+            logger.info("Arrêter le consommateur!")
