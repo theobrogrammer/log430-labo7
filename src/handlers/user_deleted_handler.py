@@ -26,7 +26,7 @@ class UserDeletedHandler(EventHandler):
         user_id = 0
         name = "None"
         email = "None"
-        datetime = "0"
+        datetime = "YYYY-MM-DD HH:mm:ss"
         filename = "None"
 
         self.logger.debug(f"Courriel HTML généré à {name} (ID: {user_id}) at {filename}")
