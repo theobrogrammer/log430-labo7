@@ -58,7 +58,7 @@ Examinez les fichiers `src/orders/commands/write_user.py` (`store_manager`) et `
 
 > ⚠️ ATTENTION: N'oubliez pas qu'il n'est pas possible d'ajouter deux utilisateurs à notre base de données avec la même adresse e-mail. Pour plus de détails, veuillez consulter `db-init/init.sql` dans l'application Store Manager.
 
-> 💡 **Question 1** : Quelle est la différence entre la communication entre `store_manager` et `coolriel` dans ce labo, et la communication entre `store_manager` et `payments_api` que nous avons implémentée pendant le labo 5 ? Expliquez avec des extraits de code ou des diagrammes.
+> 💡 **Question 1** : Quelle est la différence entre la communication entre `store_manager` et `coolriel` dans ce labo, et la communication entre `store_manager` et `payments_api` que nous avons implémentée pendant le labo 5 ? Expliquez avec des extraits de code ou des diagrammes et discutez des avantages et des inconvénients.
 
 ### 2. Implémentez un handler de suppression d'utilisateur
 
@@ -131,7 +131,7 @@ kafka:
 
 Exécutez `docker compose restart kafka` pour redémarrer votre Kafka avec les nouvelles configurations. Ensuite, créez/supprimez quelques utilisateurs pour déclencher des événements et leur enregistrer dans Kafka. 
 
-> 💡 **Question 4** : Comment Kafka utilise-t-il son système de partitionnement pour atteindre des performances de lecture élevées ? Lisez [cette section](https://kafka.apache.org/24/documentation.html#intro_topics) de la documentation officielle à Kafka et expliquez quels sont les points principaux. 
+> 💡 **Question 4** : Comment Kafka utilise-t-il son système de partitionnement pour atteindre des performances de lecture élevées ? Lisez [cette section](https://kafka.apache.org/24/documentation.html#intro_topics) de la documentation officielle à Kafka et résumez les points principaux. 
 
 ### 6. Créez un consommateur historique
 
