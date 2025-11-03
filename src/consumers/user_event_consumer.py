@@ -1,5 +1,5 @@
 """
-Kafka Consumer service
+Kafka User Event Consumer
 SPDX-License-Identifier: LGPL-3.0-or-later
 Auteurs : Gabriel C. Ullmann, Fabio Petrillo, 2025
 """
@@ -10,30 +10,28 @@ from typing import Optional
 from kafka import KafkaConsumer
 from handlers.handler_registry import HandlerRegistry
 
-logger = Logger.get_instance("Coolriel")
-
 class UserEventConsumer:
-    """Main consumer service that processes Kafka events"""
+    """A consumer that reads the latest Kafka events from a given topic"""
     
     def __init__(
         self,
         bootstrap_servers: str,
         topic: str,
         group_id: str,
-        registry: HandlerRegistry,
-        auto_offset_reset: str = 'earliest'
+        registry: HandlerRegistry
     ):
         self.bootstrap_servers = bootstrap_servers
         self.topic = topic
         self.group_id = group_id
         self.registry = registry
-        self.auto_offset_reset = auto_offset_reset
+        self.auto_offset_reset = "latest"
         self.consumer: Optional[KafkaConsumer] = None
+        self.logger = Logger.get_instance("UserEventConsumer")
     
     def start(self) -> None:
         """Start consuming messages from Kafka"""
-        logger.debug(f"Démarrer un consommateur pour le topic : {self.topic}")
-        
+        self.logger.info(f"Démarrer un consommateur : {self.group_id}")
+
         self.consumer = KafkaConsumer(
             self.topic,
             bootstrap_servers=self.bootstrap_servers,
@@ -47,7 +45,7 @@ class UserEventConsumer:
             for message in self.consumer:
                 self._process_message(message.value)
         except KeyboardInterrupt:
-            logger.info("Arrêter le consommateur!")
+            self.logger.info("Arrêter le consommateur!")
         finally:
             self.stop()
     
@@ -56,22 +54,22 @@ class UserEventConsumer:
         event_type = event_data.get('event')
         
         if not event_type:
-            logger.warning(f"Message missing 'event' field: {event_data}")
+            self.logger.warning(f"Message missing 'event' field: {event_data}")
             return
         
         handler = self.registry.get_handler(event_type)
         
         if handler:
             try:
-                logger.debug(f"Evenement : {event_type}")
+                self.logger.debug(f"Evenement : {event_type}")
                 handler.handle(event_data)
             except Exception as e:
-                logger.error(f"Error handling event {event_type}: {e}", exc_info=True)
+                self.logger.error(f"Error handling event {event_type}: {e}", exc_info=True)
         else:
-            logger.debug(f"Aucun handler enregistré pour le type : {event_type}")
+            self.logger.debug(f"Aucun handler enregistré pour le type : {event_type}")
     
     def stop(self) -> None:
         """Stop the consumer gracefully"""
         if self.consumer:
             self.consumer.close()
-            logger.info("Arrêter le consommateur!")
+            self.logger.info("Arrêter le consommateur!")

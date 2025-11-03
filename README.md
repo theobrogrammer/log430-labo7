@@ -117,7 +117,7 @@ Modifiez les handlers dans `coolriel` pour personnaliser le HTML des courriels s
 
 > 💡 **Question 3** : Comment avez-vous implémenté la vérification du type d'utilisateur ? Illustrez avec des captures d'écran ou des extraits de code.
 
-### 5. Event sourcing avec Kafka
+### 5. Préparez Kafka pour l'event sourcing
 
 Kafka n'est pas configuré par défaut pour utiliser l'approche d'event sourcing. Ça veut dire que les messages qui sont déclenchés par les différents événements seulement passent par Kafka, mais ne restent pas là. Ajoutez ces variables dans le `docker-compose.yml` dans `coolriel` pour faire en sorte que Kafka garde les messages.
 
@@ -125,19 +125,35 @@ Kafka n'est pas configuré par défaut pour utiliser l'approche d'event sourcing
 kafka:
   environment:
     KAFKA_LOG_RETENTION_HOURS: 168 # Garde les messages 7 jours
-    KAFKA_LOG_RETENTION_BYTES: 1073741824 # 1GB max par partition
-    KAFKA_LOG_SEGMENT_BYTES: 1073741824 # Taille des segments
+    KAFKA_LOG_RETENTION_BYTES: 1073741824 # Taille des partitions : 1GB
+    KAFKA_LOG_SEGMENT_BYTES: 214748364 # Taille des log segments : 200MB (parties d'une partition sur le disque)
 ```
 
-Exécutez `docker compose restart kafka` pour redémarrer votre Kafka avec les nouvelles configurations. Ensuite, créez/supprimez quelques utilisateurs pour déclencher des événements et leur enregistrer dans Kafka. Pour vérifier si les événements étaient enregistrés, créez un nouveau consommateur dans `consumers/user_history_consumer.py` qui lit l'historique complet des événements du topic `user-events` et les sauvegarde dans un fichier JSON.
+Exécutez `docker compose restart kafka` pour redémarrer votre Kafka avec les nouvelles configurations. Ensuite, créez/supprimez quelques utilisateurs pour déclencher des événements et leur enregistrer dans Kafka. 
+
+> 💡 **Question 4** : Comment Kafka utilise-t-il son système de partitionnement pour atteindre des performances de lecture élevées ? Lisez [cette section](https://kafka.apache.org/24/documentation.html#intro_topics) de la documentation officielle à Kafka et expliquez quels sont les points principaux. 
+
+### 6. Créez un consommateur historique
+
+Pour lire les événements déjà enregistrés, complétez l'implémentation du consommateur dans `consumers/user_event_history_consumer.py` qui lit l'historique complet des événements du topic `user-events`. Il est important de donner à ce consommateur un `group_id` distinct, sinon il ne pourra pas lire la partition entière. 
+
+> 📝 NOTE : Si deux consommateurs avec le même `group_id` essaient de lire une partition en même temps, Kafka répartira les partitions entre eux, et ainsi chaque consommateur lira une partie égale des événements (par example, une division 50/50 entre 2 consommateurs). Nous ne voulons pas utiliser cette fonctionnalité ici, mais elle existe pour faciliter la lecture en parallèle de grandes quantités d'événements.
+
+De plus, utilisez le paramètre `auto_offset_reset=earliest` dans `UserEventHistoryConsumer` pour lire la sequence de messages depuis le début (earliest), pas depuis la fin (latest). Finalement, utilisez [json.dumps](https://docs.python.org/3/library/json.html) pour enregistrer les événements dans un fichier JSON sur le disque.
+
+### 7. Utilisez votre nouveau consommateur
+
+Utilisez votre nouveau `UserEventHistoryConsumer` dans `coolriel.py` pour tester. Créez la nouvelle instance et appelez la méthode `start` **avant** le `UserEventConsumer`. Une fois l'exécution du consommateur commence, l'exécution reste bloquée et n'importe quel code à la ligne suivante ne s'exécutera pas jusqu'à ce que le consommateur appelle sa méthode `stop`. Utilisez les loggers pour enregistrer les messages sur le terminal.
 
 ```python
-consumer = KafkaConsumer(...)
+    from consumers.user_event_history_consumer import UserEventHistoryConsumer
+    consumer_service_history = UserEventHistoryConsumer(
+        group_id=f"{config.KAFKA_GROUP_ID}-history",
+        # ajoutez les autres paramètres (identiques à ceux utilisés dans UserEventConsumer)
+    )
 ```
 
-Utilisez votre nouveau `user_history_consumer` dans `coolriel.py` pour tester. Si vous avez besoin de mieux comprendre la séquence des événements dans le code, utilisez les loggers pour enregistrer les messages sur le terminal.
-
-> 💡 **Question 4** : Combien d'événements avez-vous récupérés dans l'historique ? Illustrez avec le fichier JSON généré.
+> 💡 **Question 5** : Combien d'événements avez-vous récupérés dans votre historique ? Illustrez avec le fichier JSON généré.
 
 ## 📦 Livrables
 
